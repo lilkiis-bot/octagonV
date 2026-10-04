@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#090909" />
+    <meta
+      name="description"
+      content="카메라로 움직이고, 옥타곤에서 스파링하세요. 스켈레톤 복싱, 샌드백 훈련과 1:1 온라인 대전."
+    />
+    <title>OCTAGON — 카메라 스파링</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./style.css?v=20261004-4" />
+    <script src="./config.js"></script>
+    <script defer src="./peerjs.min.js"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="./" aria-label="OCTAGON 홈"
+        ><img src="./favicon.svg" alt="" width="36" height="36" /><span
+          >OCTAGON<span class="brand-sub">MIRROR BOXING</span></span
+        ></a
+      >
+      <nav aria-label="앱 메뉴">
+        <span class="nav-active">스파링</span
+        ><button id="help-btn" class="plain">플레이 가이드</button>
+      </nav>
+      <div class="header-right">
+        <span class="local-tag">영상은 내 기기 안에만</span
+        ><button
+          id="sound-btn"
+          class="icon-btn"
+          aria-label="효과음 켜기"
+          aria-pressed="false"
+        >
+          ♪
+        </button>
+      </div>
+    </header>
+    <main>
+      <p id="app-status" role="status" aria-live="polite">
+        앱을 불러오는 중입니다…
+      </p>
+      <div class="page-heading">
+        <div>
+          <p class="eyebrow">SIDE BY SIDE. MOVE AS YOU.</p>
+          <h1>거울처럼, 움직이다.</h1>
+        </div>
+        <div class="session-tag">
+          <span class="live-dot"></span> TRAINING ROOM
+          <span class="tag-number">01</span>
+        </div>
+      </div>
+      <div class="workspace">
+        <section class="arena" aria-label="3D 옥타곤 스파링 경기장">
+          <div id="scene"></div>
+          <div class="arena-vignette"></div>
+          <div class="fight-hud">
+            <div class="fighter-hud">
+              <div class="fighter-label">
+                <span class="fighter-icon you">Y</span><strong>YOU</strong
+                ><span id="your-hp">100</span>
+              </div>
+              <div class="health-track">
+                <div id="your-health" class="health-fill"></div>
+              </div>
+              <div class="stamina-track"><div id="your-stamina"></div></div>
+            </div>
+            <div class="round-clock">
+              <span id="round-label">ROUND 01 / 03</span
+              ><strong id="timer">05:00</strong
+              ><small id="match-state">READY</small>
+            </div>
+            <div class="fighter-hud enemy">
+              <div class="fighter-label">
+                <span id="enemy-hp">100</span
+                ><strong id="enemy-name">PUNCH BAG</strong
+                ><span id="opponent-icon" class="fighter-icon opponent">B</span>
+              </div>
+              <div class="health-track">
+                <div id="enemy-health" class="health-fill"></div>
+              </div>
+              <div class="stamina-track"><div id="enemy-stamina"></div></div>
+            </div>
+          </div>
+          <div class="arena-label">
+            <span class="tiny-square"></span> OCTAGON / BOXING LAB
+            <small>측면 대전 · MIRROR</small>
+          </div>
+          <div
+            id="feedback"
+            class="feedback"
+            role="status"
+            aria-live="polite"
+          ></div>
+          <div id="telegraph" class="telegraph" hidden>상대 공격 준비</div>
+          <div id="welcome" class="arena-welcome">
+            <span class="eyebrow">YOUR CORNER. YOUR PACE.</span>
+            <h2>움직임 그대로.<br />한 방 더.</h2>
+            <p>내 자세로 만드는 스켈레톤.<br />샌드백부터 가볍게 시작하세요.</p>
+            <button id="quick-start" class="text-button">
+              터치로 체험하기 <span>↗</span>
+            </button>
+          </div>
+          <div class="arena-legend">
+            <span>● 내 스켈레톤</span
+            ><span id="arena-legend-opponent">샌드백</span>
+          </div>
+          <div id="result" class="result" hidden>
+            <span class="eyebrow">ROUND COMPLETE</span>
+            <h2 id="result-title">라운드 종료</h2>
+            <p id="result-detail"></p>
+            <button id="rematch" class="primary">다시 준비하기</button>
+          </div>
+          <div id="render-error" class="render-error" hidden></div>
+          <div class="arena-bottom">
+            <span id="defense-badge" class="defense-badge"
+              >NEUTRAL · 기본 자세</span
+            ><span id="fps-label">3D ENGINE</span
+            ><button
+              id="arena-pause"
+              class="icon-btn"
+              aria-label="경기 일시 정지 또는 계속하기"
+              hidden
+            >
+              Ⅱ</button
+            ><button
+              id="fullscreen"
+              class="icon-btn"
+              aria-label="경기장 전체 화면"
+            >
+              ⛶
+            </button>
+          </div>
+          <div id="hit-flash" class="hit-flash"></div>
+        </section>
+        <aside class="control-panel">
+          <div class="panel-top">
+            <h2>라운드 설정</h2>
+            <span class="eyebrow">LET’S TRAIN</span>
+          </div>
+          <div class="segmented" role="group" aria-label="대전 모드">
+            <button id="mode-bag" class="selected" aria-pressed="true">
+              샌드백 훈련</button
+            ><button id="mode-online" aria-pressed="false">1:1 온라인</button>
+          </div>
+          <section id="bag-options" class="bag-note">
+            <span class="eyebrow">FREE PRACTICE</span>
+            <p>스트레이트. 훅. 어퍼컷.</p>
+            <small>내 페이스대로, 라운드 끝까지.</small>
+          </section>
+          <section id="online-options" class="setting-section" hidden>
+            <label>프라이빗 매치 <span>4-DIGIT ROOM</span></label>
+            <div class="room-actions">
+              <button id="host-room" class="secondary">방 만들기</button
+              ><button id="show-join" class="secondary">방 참가하기</button>
+            </div>
+            <form id="join-form" hidden>
+              <label class="sr-only" for="room-input">4자리 방 코드</label
+              ><input
+                id="room-input"
+                inputmode="numeric"
+                autocomplete="off"
+                pattern="[0-9]{4}"
+                maxlength="4"
+                placeholder="0000"
+                required
+              /><button class="primary" type="submit">입장</button>
+            </form>
+            <div id="room-box" hidden>
+              <span>친구에게 알려 주세요</span
+              ><button id="room-code" title="방 코드 복사"></button
+              ><button id="leave-room" class="plain">방 나가기</button>
+            </div>
+            <p id="network-status" class="hint" role="status">
+              방장이 경기 판정을 맡습니다.
+            </p>
+            <div id="network-metrics" class="network-metrics" hidden>
+              <span>지연 <b id="ping">—</b></span
+              ><span>변동 <b id="jitter">—</b></span
+              ><span>보간 <b id="buffer">—</b></span>
+            </div>
+          </section>
+          <div class="divider"></div>
+          <section class="setting-section camera-section">
+            <div class="section-label">
+              <label>내 컨트롤 <span>INPUT</span></label
+              ><span id="camera-badge" class="small-badge">터치 / 키보드</span>
+            </div>
+            <button id="camera-btn" class="camera-button">
+              <span class="camera-symbol">◉</span
+              ><span
+                ><strong>카메라 연결</strong
+                ><small>옆모습을 비추고 시작하세요</small></span
+              ><span>＋</span>
+            </button>
+            <div class="pose-card">
+              <video
+                id="camera-video"
+                playsinline
+                muted
+                autoplay
+                aria-label="내 카메라 영상 · 상대에게 전송되지 않음"
+              ></video>
+              <div id="camera-placeholder">
+                <span>◉</span><strong>MY CAMERA</strong
+                ><small>카메라에 옆모습을 비춰 주세요</small>
+              </div>
+              <div class="pose-card-text">
+                <span id="tracking-title">MIRROR CAMERA</span
+                ><small id="tracking-status">카메라 대기 중</small>
+              </div>
+              <span id="tracking-quality" class="quality">—</span>
+            </div>
+            <div class="mirror-controls">
+              <button id="mirror-btn" class="plain" aria-pressed="true">
+                ↔ 거울 모드 켜짐
+              </button>
+              <span id="facing-status">측면 촬영</span>
+            </div>
+            <div class="recognition-readout">
+              <span>왼팔 <b id="left-angle">—</b></span
+              ><span>오른팔 <b id="right-angle">—</b></span>
+              <strong id="last-punch" aria-live="polite">펀치 인식 대기</strong>
+            </div>
+            <div id="calibration-row" hidden>
+              <button id="calibrate" class="secondary">기준 자세 보정</button
+              ><button id="camera-stop" class="plain">카메라 끄기</button>
+            </div>
+            <p id="camera-status" class="hint" role="status">
+              기기를 몸 옆에 두고 옆모습이 보이게 서세요. 두 팔을 조금 엇갈리면
+              겹침이 줄어듭니다.
+            </p>
+          </section>
+          <section class="setting-section compact-setting">
+            <label for="sensitivity"
+              >동작 감도 <output id="sensitivity-value">보통</output></label
+            ><input
+              id="sensitivity"
+              type="range"
+              min="65"
+              max="140"
+              value="100"
+              aria-label="동작 인식 감도"
+            />
+          </section>
+          <section class="setting-section compact-setting">
+            <label for="stability"
+              >스켈레톤 안정화
+              <output id="stability-value">강하게</output></label
+            >
+            <input
+              id="stability"
+              type="range"
+              min="25"
+              max="95"
+              value="75"
+              aria-label="스켈레톤 흔들림 억제 강도"
+            />
+          </section>
+          <div class="round-setting">
+            <label for="format">경기 형식</label
+            ><select id="format">
+              <option value="5x3">5분 × 3R</option>
+              <option value="5x5">5분 × 5R</option>
+              <option value="3x3">3분 × 3R</option>
+              <option value="3x5">3분 × 5R</option>
+            </select>
+          </div>
+          <button id="start-btn" class="primary start-button">
+            <span>샌드백 훈련 시작</span><span>▶</span></button
+          ><button id="pause-btn" class="secondary" hidden>일시 정지</button
+          ><button id="quit-training" class="plain" hidden>
+            훈련 끝내고 설정으로
+          </button>
+          <p class="panel-footnote">팔 올려 가드 · 펀치 3종 · 온라인 KO</p>
+        </aside>
+      </div>
+      <section class="lower-grid">
+        <div class="input-strip">
+          <div class="strip-title">
+            <span class="eyebrow">YOUR MOVES</span><strong>컨트롤</strong>
+          </div>
+          <div class="move-buttons">
+            <button data-action="leftPunch">
+              <kbd>J</kbd><span>왼 스트레이트</span>
+            </button>
+            <button data-action="rightPunch">
+              <kbd>K</kbd><span>오른 스트레이트</span>
+            </button>
+            <button data-action="leftHook">
+              <kbd>U</kbd><span>왼 훅</span>
+            </button>
+            <button data-action="rightHook">
+              <kbd>I</kbd><span>오른 훅</span>
+            </button>
+            <button data-action="leftUpper">
+              <kbd>N</kbd><span>왼 어퍼컷</span>
+            </button>
+            <button data-action="rightUpper">
+              <kbd>M</kbd><span>오른 어퍼컷</span>
+            </button>
+            <button data-hold="guard"><kbd>SPACE</kbd><span>가드</span></button>
+            <button data-hold="left"><kbd>A</kbd><span>왼쪽 회피</span></button>
+            <button data-hold="right">
+              <kbd>D</kbd><span>오른쪽 회피</span>
+            </button>
+            <button data-hold="back"><kbd>S</kbd><span>뒤로 회피</span></button>
+          </div>
+        </div>
+        <div class="session-stats">
+          <div><span>적중</span><strong id="stat-hits">0</strong></div>
+          <div>
+            <span id="stat-blocks-label">누적 타격</span
+            ><strong id="stat-blocks">0</strong>
+          </div>
+          <div>
+            <span id="stat-dodges-label">백 리셋</span
+            ><strong id="stat-dodges">0</strong>
+          </div>
+          <div><span>정확도</span><strong id="stat-accuracy">—</strong></div>
+        </div>
+      </section>
+      <footer>
+        <span>OCTAGON <b> / </b> MOVE. READ. REACT.</span
+        ><span id="footer-status">샌드백 훈련 · 영상 전송 없음</span>
+      </footer>
+    </main>
+    <dialog id="help-dialog">
+      <button id="close-help" class="dialog-close" aria-label="가이드 닫기">
+        ×
+      </button>
+      <p class="eyebrow">BEFORE THE BELL</p>
+      <h2>움직임으로 플레이하기</h2>
+      <ol>
+        <li>
+          <strong>기기를 세우고 카메라를 연결하세요.</strong>
+          <p>
+            기기를 몸 옆에 두고 측면을 촬영하세요. 머리부터 골반까지 나오면
+            보정이 안정적입니다. 두 팔을 약간 엇갈려 카메라 쪽 팔이 잘 보이게
+            하세요.
+          </p>
+        </li>
+        <li>
+          <strong>기준 자세를 보정하세요.</strong>
+          <p>
+            옆으로 선 준비 자세를 2초 동안 유지하세요. 메인 화면은 인식된 관절,
+            옆 미리보기는 내 실제 영상입니다. 영상과 스켈레톤은 같은 거울
+            방향으로 움직입니다. 어느 쪽을 봐도 되며, 몸의 방향을 바꾸면 다시
+            보정하세요. 상대에게 영상은 보내지 않습니다.
+          </p>
+        </li>
+        <li>
+          <strong>뻗고, 가리고, 피하세요.</strong>
+          <p>
+            어깨·팔꿈치·손목을 일직선으로 뻗으면 스트레이트입니다. 팔꿈치를
+            굽히고 안쪽으로 휘두르면 훅, 아래에서 위로 올려치면 어퍼컷입니다. 한
+            번 친 뒤 팔을 접어 준비 자세로 돌아오세요. 팔을 굽혀 올리거나 손을
+            머리 위로 올리면 가드합니다. 머리를 옆으로 움직이거나 뒤로 물러나면
+            회피합니다.
+          </p>
+        </li>
+        <li>
+          <strong>샌드백으로 연습하고, 온라인에서 대결하세요.</strong>
+          <p>
+            샌드백은 반격하지 않고 내구도가 0이면 자동 복구됩니다. 온라인에서는
+            상대 공격이 닿는 순간 전후 0.125초에, 충분한 스태미나로 가드 없는
+            머리 중심을 강하게 맞히면 즉시 KO입니다. 가까운 거리와 정확한
+            타이밍이 필요합니다. 일반 타격으로 체력이 0이 되어도 KO입니다.
+          </p>
+        </li>
+        <li>
+          <strong>친구와 4자리 코드로 만나세요.</strong>
+          <p>
+            온라인 모드에서 한 명이 방을 만들고 다른 한 명이 코드를 입력합니다.
+            두 명 모두 준비하면 시작합니다. 경기는 3분 또는 5분, 3라운드 또는
+            5라운드이며 라운드 사이 15초간 쉽니다.
+          </p>
+        </li>
+      </ol>
+      <p class="hint">
+        단일 카메라의 3D 자세·거리 추정에는 오차가 있습니다. 밝은 곳에서
+        보정하고 감도를 조절하세요. 모바일에서는 HTTPS 주소를 Safari 또는
+        Chrome으로 여세요. 일부 네트워크의 온라인 연결에는 TURN 설정이
+        필요합니다.
+      </p>
+      <button id="help-done" class="primary">준비됐어요</button>
+    </dialog>
+    <div id="toast" role="status" aria-live="polite" hidden></div>
+    <script
+      src="./boot.js?v=20261004-4"
+      data-entry="./app.js?v=20261004-4"
+    ></script>
+  </body>
+</html>
